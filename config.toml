@@ -1,0 +1,4 @@
+baseURL = "https://therdispatch.netlify.app/"
+languageCode = "en-us"
+title = "The R Dispatch"
+ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
