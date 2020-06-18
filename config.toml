@@ -1,4 +1,36 @@
-baseURL = "https://therdispatch.netlify.app/"
-languageCode = "en-us"
 title = "The R Dispatch"
+baseURL = "https://therdispatch.netlify.app"
+languageCode = "en-us"
+theme = "gohugo-theme-ananke"
+
+MetaDataFormat = "yaml"
+DefaultContentLanguage = "en"
+SectionPagesMenu = "main"
+Paginate = 3 # this is set low for demonstrating with dummy content. Set to a higher number
+googleAnalytics = ""
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
+
+[sitemap]
+  changefreq = "monthly"
+  priority = 0.5
+  filename = "sitemap.xml"
+
+[params]
+  favicon = ""
+  site_logo = "/images/rdispatch-white.png"
+  description = "An R Centered Knowledge Base."
+  facebook = ""
+  twitter = ""
+  instagram = ""
+  youtube = ""
+  github = "https://github.com/jimbrig"
+  gitlab = ""
+  linkedin = "www.linkedin.com/in/jimbrig"
+  mastodon = ""
+  slack = ""
+  stackoverflow = "https://stackexchange.com/users/7999132/jimmy"
+  rss = ""
+  # choose a background color from any on this page: http://tachyons.io/docs/themes/skins/ and preface it with "bg-"
+  background_color_class = "bg-black"
+  featured_image = "images/background.jpg"
+  recent_posts_number = 2
