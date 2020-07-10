@@ -4,5 +4,5 @@ title: Rticles
 featured_image: "/images/brain-2.jpg"
 ---
 
-My list of **Rticles** (R related articles).
+My list of **Rticles**, R related articles written by yours truely.
 
