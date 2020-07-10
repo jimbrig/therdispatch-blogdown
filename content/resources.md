@@ -7,4 +7,6 @@ title: Resources
 type: page
 ---
 
+# Resource Library
+
 COMING SOON!

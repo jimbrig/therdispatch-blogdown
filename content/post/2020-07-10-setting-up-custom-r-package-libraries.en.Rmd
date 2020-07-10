@@ -127,4 +127,4 @@ library("shiny", lib.loc = getOption("dev_lib"))
 ## Additional Resources
 
 If you would like to take this idea a little further, you should look into creating 
-project specific libraries using the `renv` package. 
+project specific libraries using the [renv](https://github.com/rstudio/renv) package. 
