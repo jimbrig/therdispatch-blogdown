@@ -2,16 +2,20 @@
 title: Setting up Custom R Package Libraries
 author: Jimmy Briggs
 date: '2020-07-10'
-slug: setting-up-custom-r-package-libraries
 categories:
   - Advice
-  - Programming
-  - Tips & Tricks
-  - R
   - Package
-tags: []
-description: ''
-featured_image: '/images/r-packages.png'
+  - Programming
+  - R
+  - Tips & Tricks
+tags:
+  - Advice
+  - Tips & Tricks
+  - R-Packages
+  - Development
+  - Reproducibility
+slug: setting-up-custom-r-package-libraries
+featured_image: /images/r-packages.png
 ---
 
 ```{r setup, include=FALSE}
