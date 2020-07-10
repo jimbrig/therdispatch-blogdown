@@ -76,8 +76,8 @@ internal R Options (so as to keep them hidden from the environment variables):
 
 ```{r rprofile, eval=FALSE}
 options(
-    "dev_lib" = "C:/Users/jimmy.briggs/Computer/Program Files/User/R/win-library/Dev",
-    "old_lib" = "C:/Users/jimmy.briggs/Computer/Program Files/User/R/win-library/Old"
+    "dev_lib" = gsub("4.0", "Dev", .libPaths()[1]),
+    "old_lib" = gsub("4.0", "Old", .libPaths()[1])
 )
 ```
 

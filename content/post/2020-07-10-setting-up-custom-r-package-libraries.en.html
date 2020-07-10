@@ -55,8 +55,8 @@ method via the <code>.Rprofile</code> startup dotfile.</p>
 <p>Here are the lines of code I added to my <code>.Rprofile</code> which add these new paths as
 internal R Options (so as to keep them hidden from the environment variables):</p>
 <pre class="r"><code>options(
-    &quot;dev_lib&quot; = &quot;C:/Users/jimmy.briggs/Computer/Program Files/User/R/win-library/Dev&quot;,
-    &quot;old_lib&quot; = &quot;C:/Users/jimmy.briggs/Computer/Program Files/User/R/win-library/Old&quot;
+    &quot;dev_lib&quot; = gsub(&quot;4.0&quot;, &quot;Dev&quot;, .libPaths()[1]),
+    &quot;old_lib&quot; = gsub(&quot;4.0&quot;, &quot;Old&quot;, .libPaths()[1])
 )</code></pre>
 <p>Now every time R is loaded I can access these library paths via
 <code>getOption("dev_lib")</code> or <code>getOption("old_lib")</code>.</p>
