@@ -1,0 +1,126 @@
+---
+title: Setting up Custom R Package Libraries
+author: Jimmy Briggs
+date: '2020-07-10'
+slug: setting-up-custom-r-package-libraries
+categories:
+  - Advice
+  - Programming
+  - Tips & Tricks
+  - R
+  - Package
+tags: []
+description: ''
+featured_image: '/images/r-packages.png'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  error = FALSE,
+  eval = FALSE,
+  echo = TRUE
+)
+```
+
+## Overview
+
+Dealing with R Packages can be a pain sometimes, especially when dealing with 
+development versions of evolving packages over time. Additionally, sometimes it 
+is necessary to revert back to an old version of a package in order to reproduce 
+an old project or replicate a test environment for a deployment.  
+
+To resolve some of the pains associated with this process, I came up with a 
+nice little solution, which I will explain in this post.  
+
+## Setup Personal Libraries
+
+The goal is to have additional system wide libraries for **Dev** packages as well 
+as **Old** versions of packages, in addition to your default `.libPaths()` user 
+library.
+
+For me this is how I set up the folders:
+
+![](/post/2020-07-10-setting-up-custom-r-package-libraries.en_files/dirs.png)
+
+***
+
+To do this I ran the following code:
+
+```{r setup_dirs, eval=FALSE}
+dev_path <- gsub("4.0", "Dev", .libPaths()[1])
+dir.create(dev_path)
+
+old_path <- gsub("4.0", "Old", .libPaths()[1])
+dir.create(old_path)
+```
+
+However, we need a way for these libPaths to be accessible from R. 
+
+## Setting up RProfile
+
+To do this you could utilize the Windows Environment Variable Paths 
+(like the default library path does), but instead I decided on a simpler 
+method via the `.Rprofile` startup dotfile. 
+
+To access your `.Rprofile` you can run `usethis::edit_r_profile()`.
+
+Here are the lines of code I added to my `.Rprofile` which add these new paths as 
+internal R Options (so as to keep them hidden from the environment variables):
+
+```{r rprofile, eval=FALSE}
+options(
+    "dev_lib" = "C:/Users/jimmy.briggs/Computer/Program Files/User/R/win-library/Dev",
+    "old_lib" = "C:/Users/jimmy.briggs/Computer/Program Files/User/R/win-library/Old"
+)
+```
+
+
+Now every time R is loaded I can access these library paths via 
+`getOption("dev_lib")` or `getOption("old_lib")`. 
+
+## Adding Packages
+
+Now, we want to add some packages to the newly created `Dev` and `old` package 
+libraries.
+
+For example, let's say I need the old version of dplyr (v0.8.5) instead of the 
+current v1.0.0. I can install it into the `old_lib` via:  
+
+```{r dplyr, eval=FALSE}
+remotes::install_version("dplyr", 
+                         version = "0.8.5",
+                         lib = getOption("old_lib"),
+                         upgrade = "never")
+```
+
+and library it using:
+
+```{r load_dplyr, eval=FALSE}
+library("dplyr", lib.loc = getOption("old_lib"))
+```
+
+Notice my use of the argument `upgrade = "never"` in my call to `remotes::install_version`.
+
+Alternatively, let's say I want the development version of the `shiny` package in 
+my `dev_lib` to try out new features not yet on CRAN:  
+
+```{r}
+remotes::install_github("shiny", 
+                        lib = getOption("dev_lib"), 
+                        upgrade = "always")
+```
+
+and to library...
+
+```{r}
+library("shiny", lib.loc = getOption("dev_lib"))
+```
+
+
+## Additional Resources
+
+If you would like to take this idea a little further, you should look into creating 
+project specific libraries using the `renv` package. 

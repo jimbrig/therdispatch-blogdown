@@ -1,0 +1,85 @@
+---
+title: Setting up Custom R Package Libraries
+author: Jimmy Briggs
+date: '2020-07-10'
+slug: setting-up-custom-r-package-libraries
+categories:
+  - Advice
+  - Programming
+  - Tips & Tricks
+  - R
+  - Package
+tags: []
+description: ''
+featured_image: '/images/r-packages.png'
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>Dealing with R Packages can be a pain sometimes, especially when dealing with
+development versions of evolving packages over time. Additionally, sometimes it
+is necessary to revert back to an old version of a package in order to reproduce
+an old project or replicate a test environment for a deployment.</p>
+<p>To resolve some of the pains associated with this process, I came up with a
+nice little solution, which I will explain in this post.</p>
+</div>
+<div id="setup-personal-libraries" class="section level2">
+<h2>Setup Personal Libraries</h2>
+<p>The goal is to have additional system wide libraries for <strong>Dev</strong> packages as well
+as <strong>Old</strong> versions of packages, in addition to your default <code>.libPaths()</code> user
+library.</p>
+<p>For me this is how I set up the folders:</p>
+<p><img src="/post/2020-07-10-setting-up-custom-r-package-libraries.en_files/dirs.png" /></p>
+<hr />
+<p>To do this I ran the following code:</p>
+<pre class="r"><code>dev_path &lt;- gsub(&quot;4.0&quot;, &quot;Dev&quot;, .libPaths()[1])
+dir.create(dev_path)
+
+old_path &lt;- gsub(&quot;4.0&quot;, &quot;Old&quot;, .libPaths()[1])
+dir.create(old_path)</code></pre>
+<p>However, we need a way for these libPaths to be accessible from R.</p>
+</div>
+<div id="setting-up-rprofile" class="section level2">
+<h2>Setting up RProfile</h2>
+<p>To do this you could utilize the Windows Environment Variable Paths
+(like the default library path does), but instead I decided on a simpler
+method via the <code>.Rprofile</code> startup dotfile.</p>
+<p>To access your <code>.Rprofile</code> you can run <code>usethis::edit_r_profile()</code>.</p>
+<p>Here are the lines of code I added to my <code>.Rprofile</code> which add these new paths as
+internal R Options (so as to keep them hidden from the environment variables):</p>
+<pre class="r"><code>options(
+    &quot;dev_lib&quot; = &quot;C:/Users/jimmy.briggs/Computer/Program Files/User/R/win-library/Dev&quot;,
+    &quot;old_lib&quot; = &quot;C:/Users/jimmy.briggs/Computer/Program Files/User/R/win-library/Old&quot;
+)</code></pre>
+<p>Now every time R is loaded I can access these library paths via
+<code>getOption("dev_lib")</code> or <code>getOption("old_lib")</code>.</p>
+</div>
+<div id="adding-packages" class="section level2">
+<h2>Adding Packages</h2>
+<p>Now, we want to add some packages to the newly created <code>Dev</code> and <code>old</code> package
+libraries.</p>
+<p>For example, let’s say I need the old version of dplyr (v0.8.5) instead of the
+current v1.0.0. I can install it into the <code>old_lib</code> via:</p>
+<pre class="r"><code>remotes::install_version(&quot;dplyr&quot;, 
+                         version = &quot;0.8.5&quot;,
+                         lib = getOption(&quot;old_lib&quot;),
+                         upgrade = &quot;never&quot;)</code></pre>
+<p>and library it using:</p>
+<pre class="r"><code>library(&quot;dplyr&quot;, lib.loc = getOption(&quot;old_lib&quot;))</code></pre>
+<p>Notice my use of the argument <code>upgrade = "never"</code> in my call to <code>remotes::install_version</code>.</p>
+<p>Alternatively, let’s say I want the development version of the <code>shiny</code> package in
+my <code>dev_lib</code> to try out new features not yet on CRAN:</p>
+<pre class="r"><code>remotes::install_github(&quot;shiny&quot;, 
+                        lib = getOption(&quot;dev_lib&quot;), 
+                        upgrade = &quot;always&quot;)</code></pre>
+<p>and to library…</p>
+<pre class="r"><code>library(&quot;shiny&quot;, lib.loc = getOption(&quot;dev_lib&quot;))</code></pre>
+</div>
+<div id="additional-resources" class="section level2">
+<h2>Additional Resources</h2>
+<p>If you would like to take this idea a little further, you should look into creating
+project specific libraries using the <code>renv</code> package.</p>
+</div>
