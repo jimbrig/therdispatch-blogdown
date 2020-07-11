@@ -1,0 +1,27 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# The-R-Dispatch <img src="static/images/rdispatch.png" align="right" />
+
+<!-- badges: start -->
+[![Netlify Status](https://api.netlify.com/api/v1/badges/b8d9532b-dc4b-499d-8ab3-9da1804eb533/deploy-status)](https://app.netlify.com/sites/therdispatch/deploys)
+<!-- badges: end -->
+
+
+Build with blogdown.
+
+## Session Info
+
+```{r, echo=FALSE}
+sessioninfo::session_info()
+```
