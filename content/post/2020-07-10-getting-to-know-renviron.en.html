@@ -1,0 +1,110 @@
+---
+title: Getting to know .Renviron
+author: Jimmy Briggs
+date: '2020-07-10'
+slug: getting-to-know-renviron
+categories:
+  - R
+tags:
+  - Development
+  - Configuration
+description: 'Setup and configure your environment variables with .Renviron.'
+featured_image: '/images/coding-background.jpg'
+show_reading_time: true
+---
+
+
+
+<div id="renviron" class="section level2">
+<h2>.Renviron</h2>
+<p>Once you start working with APIs, you will find yourself working with keys and
+tokens and shared secrets.</p>
+<p>To the extent possible, you should avoid putting those sorts of things directly
+in your code. The reason is quite simple: depending on the platform and its API,
+those alphanumeric identifiers may very well unlock access to your data for
+anyone who comes into possession of them.</p>
+<p>Or, if not unlocking access to your data, they can enable others to use cloud-based
+resources (like the Google Cloud platform) that can cost you money!</p>
+<p>R has a good way to drastically reduce the risk of this occurring. It’s up to you
+to take advantage of that mechanism, though.</p>
+</div>
+<div id="r-startup-files" class="section level2">
+<h2>R Startup Files</h2>
+<p>R has a couple of “startup” files:</p>
+<p><code>.Rprofile</code> gets executed every time R starts up, so,
+if you always want to run some specific script, you can put it in the
+<code>.Rprofile</code> file.</p>
+<p><code>.Renviron</code> also gets evaluated every time an R session starts,
+but its sole purpose is to set environment variables.</p>
+<p>We’re not going to go into detail on <code>.Rprofile</code> here, as it’s not used for the
+API key protection that we’re covering.</p>
+<p>So, there’s a <code>.Renviron</code> file. File that away for now.</p>
+</div>
+<div id="a-hierarchy-of-locations" class="section level2">
+<h2>A Hierarchy of Locations</h2>
+<p>These startup files can be located in three different locations, but only one
+version of any file will be read and used for any given R session.</p>
+<p>So, which one gets used? The file that gets used is the one that exists at the
+lowest level of the hierarchy. We’ll start from the top of the hierarchy.</p>
+</div>
+<div id="r_home" class="section level2">
+<h2>R_HOME</h2>
+<p>R_HOME is the directory in which R is installed. Enter R.home()
+to find out that location.</p>
+<p>There may be cases where you want to put the .Renviron file here…but generally
+not. It’s just cleaner to keep “the program itself” separate from “the
+configuration of the program.”</p>
+</div>
+<div id="home" class="section level2">
+<h2>HOME</h2>
+<p>HOME is actually the user’s home directory. You can find out what your HOME
+directory is with <code>Sys.getenv("HOME")</code>. This can be a good place to locate your
+<code>.Renviron</code> file. It’s a good place if you are not setting any variables that
+you want to change from project to project.</p>
+</div>
+<div id="the-working-directory" class="section level2">
+<h2>The Working Directory</h2>
+<p>We touched on this earlier, and it’s generally set as the current project’s
+directory. You can find the current working directory with <code>getwd()</code>. If you have
+different credentials that you use with different projects, then you probably want
+to place your <code>.Renviron</code> file in the project directory.</p>
+</div>
+<div id="renviron-file-structure" class="section level2">
+<h2>.Renviron File Structure</h2>
+<p>The structure of the <code>.Renviron</code> file is quite simple.</p>
+<p>It’s just a text file with one row for each variable you want to define.</p>
+<p>As an example, the following .Renviron file establishes two environment
+variables: <code>ADOBE_KEY</code> and <code>ADOBE_SECRET</code>.</p>
+<p>There is no magic to the naming – just make them clear (and ALL CAPS is a
+nice convention to use):</p>
+<pre><code>ADOBE_KEY=&quot;a7xxxxx639-iih-nordic-r&quot;
+ADOBE_SECRET=&quot;2eadxxxxx1495ea49&quot;</code></pre>
+</div>
+<div id="accessing-the-variables" class="section level2">
+<h2>Accessing the Variables</h2>
+<p>Environment variables are accessed using the <code>Sys.getenv()</code> command.</p>
+<p>Consider the above example. Let’s say that we’re writing a script that uses
+RSiteCatalyst and needs to use the API username and secret.</p>
+<p>In the script, we could create two new objects, and then set them to be the
+values from the environment variables:</p>
+<pre><code>adobe_key &lt;- Sys.getenv(&quot;ADOBE_KEY&quot;)
+adobe_secret &lt;- Sys.getenv(&quot;ADOBE SECRET&quot;)</code></pre>
+<p>From that point onward, I can use adobe_key and adobe_secret.</p>
+<p>In this case, the objects created in the script were just lowercase forms of
+the actual environment variable. This is not a requirement.</p>
+<p>But, if what you’re storing is something where that sort of consistency makes
+sense, then it’s one approach for making things clear and consistent.</p>
+</div>
+<div id="avoiding-sharing-.renviron" class="section level2">
+<h2>Avoiding Sharing .Renviron</h2>
+<p>We’ll cover Github later, but, if you’re using Github to manage your projects
+(and there are lots of reasons to do that), you do not want to include your
+<code>.Renviron</code> file when you commit code to the repository.</p>
+<p>The way to bake this into your process is to add a couple of lines
+(one line, really, but comments are nice to use):</p>
+<pre><code># Environment file 
+.Renviron</code></pre>
+<p>The <code>.gitignore</code> file specifies which files to not include when checking
+updates into a repository. You may also want to include data files in the
+<code>.gitignore</code> file but that’s a topic for another page.</p>
+</div>

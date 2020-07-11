@@ -1,0 +1,19 @@
+---
+title: Introducing The R Dispatch Raw Notes
+author: Jimmy Briggs
+date: '2020-07-11'
+slug: introducing-the-r-dispatch-raw-notes
+categories:
+  - R
+tags:
+  - Notes
+  - Announcement
+description: 'New Site Launched - The R Dispatch Raw Notes'
+featured_image: '/images/notes.jpg'
+---
+
+## Want More?
+
+Visit [The R Dispatch - Raw Notes](https://therdispatch.postach.io/) 
+to discover the raw material behind my content. Currently I have over 250 raw 
+notes I am working through.
