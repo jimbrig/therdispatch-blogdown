@@ -1,5 +1,5 @@
 title = "The R Dispatch"
-baseURL = "https://therdispatch.netlify.app"
+baseURL = "https://therdispatch.netlify.app/"
 languageCode = "en-us"
 theme = "gohugo-theme-ananke"
 
@@ -29,7 +29,7 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
   mastodon = ""
   slack = ""
   stackoverflow = "https://stackexchange.com/users/7999132/jimmy"
-  rss = ""
+  rss = "https://therdispatch.netlify.app/index.xml"
   # choose a background color from any on this page: http://tachyons.io/docs/themes/skins/ and preface it with "bg-"
   background_color_class = "bg-black"
   featured_image = "images/background.jpg"
