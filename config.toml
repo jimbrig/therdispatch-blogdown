@@ -29,7 +29,7 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
   mastodon = ""
   slack = ""
   stackoverflow = "https://stackexchange.com/users/7999132/jimmy"
-  rss = "https://therdispatch.netlify.app/index.xml"
+  rss = "https://therdispatch.netlify.app/feed"
   # choose a background color from any on this page: http://tachyons.io/docs/themes/skins/ and preface it with "bg-"
   background_color_class = "bg-black"
   featured_image = "images/background.jpg"
