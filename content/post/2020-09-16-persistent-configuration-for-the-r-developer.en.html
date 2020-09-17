@@ -1,0 +1,335 @@
+---
+title: Persistent Configuration for the R Developer
+author: Jimmy Briggs
+date: '2020-09-16'
+slug: persistent-configuration-for-the-r-developer
+categories:
+  - Package
+  - Programming
+  - Advice
+  - R
+  - Tips & Tricks
+tags:
+  - Configuration
+  - Development
+  - Environment
+  - Data Management
+  - Package Development
+description: 'Best practices and ideas for R package developers regarding using and setting persistent configuration and data on the local user machine.'
+featured_image: '/images/devops.jpg'
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>Does your R package work best with some configuration?
+You probably want it to be easily found by your package.</p>
+<p>Does your R package download huge datasets that don’t change much on the provider side?
+Maybe you want to save the corresponding data somewhere persistent so that things will go faster during the next R session.</p>
+<div id="preface-standard-locations-on-the-users-machine" class="section level2">
+<h2>Preface: standard locations on the user’s machine</h2>
+<p>Throughout this post we’ll often refer to standard locations on the user’s machine.</p>
+<p><em>“Applications can actually store user level configuration information, cached data, logs, etc. in the user’s home directory, and there is a standard way to do this [depending on the operating system].”</em></p>
+<p>R packages that are on CRAN cannot write to the home directory without getting confirmation from the user, but they can and should use standard locations.</p>
+<p>To find where those are, package developers can use the <a href="https://github.com/r-lib/rappdirs"><code>rappdirs</code> package</a>.</p>
+<pre class="r"><code># Using a reference class object
+rhub_app &lt;- rappdirs::app_dir(&quot;rhub&quot;, &quot;r-hub&quot;)
+rhub_app$cache()</code></pre>
+<pre><code>## [1] &quot;C:\\Users\\JIMMY~1.BRI\\AppData\\Local\\r-hub\\rhub\\Cache&quot;</code></pre>
+<pre class="r"><code># or functions
+rappdirs::user_cache_dir(&quot;rhub&quot;)</code></pre>
+<pre><code>## [1] &quot;C:\\Users\\JIMMY~1.BRI\\AppData\\Local\\rhub\\rhub\\Cache&quot;</code></pre>
+<p>On top of these non-R specific standard locations, we’ll also mention the standard homes of R <em>options</em> and <em>environment variables</em>, .Rprofile and .Renviron.</p>
+</div>
+<div id="user-preferences" class="section level2">
+<h2>User preferences</h2>
+<p>As written in <a href="https://developer.android.com/training/id-auth/identify">Android developer guidance</a> and probably every customer service guide ever, <em>“Everyone likes it when you remember their name”</em>.
+Everyone probably likes it too when the barista at their favorite coffee shop remembers their usual order.
+As an R package developer, what can you do for your R package to correctly assess user preferences and settings?</p>
+<div id="using-options" class="section level3">
+<h3>Using options</h3>
+<p>In R, <code>options</code> <em>allow the user to set and examine a variety of global options which affect the way in which R computes and displays its results</em>. For instance, for the usethis package, the <a href="https://github.com/r-lib/usethis/blob/c0acd1b5e43f03773a5934c1d937bf70b77a2557/principles.md#communicating-with-the-user"><code>usethis.quiet</code> option can control whether usethis is chatty</a><a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>. Users either:</p>
+<ul>
+<li><p>write <code>options(usethis.quiet = TRUE)</code> at the beginning of a script or directly in the console;</p></li>
+<li><p>or write that same line in their <a href="https://rstats.wtf/r-startup.html">.Rprofile that’s loaded before every session</a>, which is more persistent.</p></li>
+</ul>
+<p>Users can use a project-level or more global user-level .Rprofile.
+The use of a project-level .Rprofile overrides the user-level .Rprofile unless the project-level .Rprofile contains the following lines <a href="https://bookdown.org/yihui/blogdown/global-options.html">as mentioned in the <code>blogdown</code> book</a>:</p>
+<pre class="r"><code># in .Rprofile of the project
+if (file.exists(&#39;~/.Rprofile&#39;)) {
+  base::sys.source(&#39;~/.Rprofile&#39;, envir = environment())
+}
+# then set project options</code></pre>
+<p>For more startup tweaks, the user could adopt <a href="https://cran.r-project.org/web/packages/startup/index.html">the <code>startup</code> package</a>.</p>
+<p>As a package developer in your code you can retrieve options by using <code>getOption()</code> whose second argument is a fallback for when the option hasn’t been set by the user.
+Note that an option can be any R object.</p>
+<pre class="r"><code>options(blabla.foo = TRUE)
+if (isTRUE(getOption(&quot;blabla.foo&quot;, FALSE))) {
+  message(&quot;foo!&quot;)
+}</code></pre>
+<pre><code>## foo!</code></pre>
+<pre class="r"><code>options(blabla.bar = mean)
+getOption(&quot;blabla.bar&quot;)(c(1:7))</code></pre>
+<pre><code>## [1] 4</code></pre>
+<p>The use of options in the .Rprofile startup file is great for workflow packages like <code>usethis</code>, <code>blogdown</code>, etc., but shouldn’t be used for, say, arguments influencing the results of a statistical function.</p>
+</div>
+<div id="using-environment-variables" class="section level3">
+<h3>Using environment variables</h3>
+<p>Environment variables, found via <code>Sys.getenv()</code> rather than <code>getOption()</code>, are often used for storing secrets (like <a href="https://github.com/r-lib/gh#tokens"><code>GITHUB_PAT</code> for the <code>gh</code> package</a>) or the path to secrets on disk (like <a href="https://rtweet.info/articles/auth.html"><code>TWITTER_PAT</code> for <code>rtweet</code></a>), or not secrets (e.g. <a href="https://github.com/rstudio/chromote#specifying-which-browser-to-use">the browser to use for <code>chromote</code></a>).</p>
+<p>Similar to using <code>options()</code> in the console or at the top of a script the user could use <code>Sys.setenv()</code>.
+Obviously, secrets should not be written at the top of a script that’s public.
+To make environment variables persistent they need to be stored in a startup file, .Renviron.
+.Renviron does not contain R code like .Rprofile, but rather key-value pairs that are only called via <code>Sys.getenv()</code>.</p>
+<p>As a package developer, you probably want to at least document how to set persistent variables or provide a link to such documentation; and you could even provide helper functions like <a href="https://rtweet.info/reference/create_token.html">what <code>rtweet</code> does</a>.</p>
+</div>
+<div id="using-credential-stores-for-secrets" class="section level3">
+<h3>Using credential stores for secrets</h3>
+<p>Although say API keys are often stored in <code>.Renviron</code>, they could also be stored in a standard and more secure location depending on the operating system.
+The <a href="https://github.com/r-lib/keyring#keyring"><code>keyring</code> package</a> allows to interact with such credential stores.
+You could either take it on as a dependency like e.g. <a href="https://github.com/r-lib/gh/blob/bfff4473c2876e4fbdb48d952c86e804d75174ad/R/gh_token.R#L34"><code>gh</code></a>, or recommend the user of your package to use <code>keyring</code> and to add a line like</p>
+<pre class="r"><code>Sys.setenv(SUPERSECRETKEY = keyring::key_get(&quot;myservice&quot;))</code></pre>
+<p>in their scripts.</p>
+</div>
+<div id="using-a-config-file" class="section level3">
+<h3>Using a config file</h3>
+<p>The <code>batchtools</code> package expect its users to setup a config file somewhere if they don’t want to use the defaults.
+That somewhere can be several locations, as <a href="https://mllg.github.io/batchtools/reference/findConfFile.html">explained in the <code>batchtools::findConfFile()</code> manual page</a>.
+Two of the possibilities are <code>rappdirs::user_config_dir("batchtools", expand = FALSE)</code> and <code>rappdirs::site_config_dir("batchtools")</code> which refer to standard locations that are different depending on the operating system.</p>
+<p>The <a href="https://thinkr-open.github.io/golem/articles/e_config.html"><code>golem</code> package offers its users the possibility to use a config file based on the <code>config</code> package</a>.</p>
+</div>
+<div id="a-good-default-experience" class="section level3">
+<h3>A good default experience</h3>
+<p>Obviously, on top of letting users set their own preferences, you probably want your package functions to have sensible defaults. :grin:</p>
+</div>
+<div id="asking-or-guessing" class="section level3">
+<h3>Asking or guessing?</h3>
+<p>For basic information such as username, email, GitHub username, the <a href="https://github.com/r-lib/whoami#readme"><code>whoami</code> package</a> does pretty well.</p>
+<pre class="r"><code>whoami::whoami()</code></pre>
+<pre><code>##                       username                       fullname 
+##                 &quot;jimmy.briggs&quot;                 &quot;Jimmy Briggs&quot; 
+##                  email_address                    gh_username 
+## &quot;jimmy.briggs@oliverwyman.com&quot;                      &quot;jimbrig&quot;</code></pre>
+<pre class="r"><code>whoami::email_address()</code></pre>
+<pre><code>## [1] &quot;jimmy.briggs@oliverwyman.com&quot;</code></pre>
+<p>In particular, for the email address, if the R environment variable <code>EMAIL</code> isn’t set, <code>whoami</code> uses a call to <code>git</code> to find Git’s global configuration.
+Similarly, the <a href="https://jeroen.cran.dev/gert/"><code>gert</code> package</a> can find and return Git’s preferences via <a href="https://jeroen.cran.dev/gert/reference/git_config.html"><code>gert::git_config_global()</code></a><a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>.</p>
+<p>In these cases where packages <em>guess</em> something, their guessing is based on the use of standard locations for such information on different operating systems.
+Unsurprisingly, in the next section, we’ll recommend using such standard locations when caching <em>data</em>.</p>
+</div>
+</div>
+<div id="not-so-temporary-files" class="section level2">
+<h2>Not so temporary files</h2>
+<p>To quote <a href="https://developer.android.com/jetpack/docs/guide#best-practices">Android developers guide</a> again, <em>“Persist as much relevant and fresh data as possible.”</em>.</p>
+<p>A package that exemplifies doing so is <a href="https://docs.ropensci.org/getlandsat/"><code>getlandsat</code></a> that downloads “Landsat 8 data from AWS public data sets” from the web.
+The first time the user <a href="https://docs.ropensci.org/getlandsat/reference/lsat_image.html">downloads an image</a>, the result is cached so next time no query needs to be made.
+A very nice aspect of <code>getlandsat</code> is its providing <a href="https://docs.ropensci.org/getlandsat/reference/lsat_cache.html">cache management functions</a></p>
+<pre class="r"><code>library(&quot;getlandsat&quot;)
+# list files in cache
+lsat_cache_list()</code></pre>
+<pre><code>## character(0)</code></pre>
+<pre class="r"><code># List info for single files
+lsat_cache_details(files = lsat_cache_list()[1])</code></pre>
+<pre><code>## &lt;landsat cached files&gt;
+##   directory: C:\Users\JIMMY~1.BRI\AppData\Local\landsat-pds\landsat-pds\Cache
+## 
+##   file: NA
+##   size: NA mb</code></pre>
+<pre class="r"><code>lsat_cache_details(files = lsat_cache_list()[2])</code></pre>
+<pre><code>## &lt;landsat cached files&gt;
+##   directory: C:\Users\JIMMY~1.BRI\AppData\Local\landsat-pds\landsat-pds\Cache
+## 
+##   file: NA
+##   size: NA mb</code></pre>
+<pre class="r"><code># List info for all files
+lsat_cache_details()</code></pre>
+<pre><code>## &lt;landsat cached files&gt;
+##   directory: C:\Users\JIMMY~1.BRI\AppData\Local\landsat-pds\landsat-pds\Cache</code></pre>
+<pre class="r"><code># delete files by name in cache
+# lsat_cache_delete(files = lsat_cache_list()[1])
+
+# delete all files in cache
+# lsat_cache_delete_all()</code></pre>
+<p>The <code>getlandasat</code> <a href="https://github.com/ropensci/getlandsat/blob/b753ec8a4254953565a2a8a5f200a70e34c68bbf/R/cache.R#L111">uses the <code>rappdirs</code> package</a> we mentioned earlier.</p>
+<pre class="r"><code>lsat_path &lt;- function() rappdirs::user_cache_dir(&quot;landsat-pds&quot;)</code></pre>
+<p>When using <code>rappdirs</code>, keep <a href="https://rdrr.io/cran/rappdirs/man/rappdirs-package.html#heading-3">caveats</a> in mind.</p>
+<p>If you hesitate to use e.g. <code>rappdirs::user_cache_dir()</code> vs <code>rappdirs::user_data_dir()</code>, use a <a href="/2019/05/14/read-the-source/#how-to-search-the-source">GitHub code search</a>.</p>
+<div id="rappdirs-or-not" class="section level3">
+<h3>rappdirs or not</h3>
+<p>To use an app directory from within your package you can use <code>rappdirs</code> as mentioned earlier, but also other tools.</p>
+<ul>
+<li>Package developers might also like the <a href="https://docs.ropensci.org/hoardr/"><code>hoardr</code> package</a> that basically creates an R6 object building on <code>rappdirs</code> with a few more methods (directory creation, deletion).</li>
+</ul>
+{{% tweet "1233495999982628865" %}}
+<ul>
+<li>Some package authors “roll their own” like Henrik Bengtsson in <a href="https://github.com/HenrikBengtsson/R.cache"><code>R.cache</code></a>.</li>
+</ul>
+{{% tweet "1233487759412809734" %}}
+<ul>
+<li>R-devel “just gained support for OS-agile user-specific #rstats cache/config/data folders” <a href="https://twitter.com/henrikbengtsson/status/1233496382608199683">which is big</a> (but if you use the base R implementation available after R 4.x.y, <a href="https://twitter.com/JennyBryan/status/1233506099292246016">unless your package depends on R above that version you’ll need to backport the functionality</a> <a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>).</li>
+</ul>
+</div>
+</div>
+<div id="more-or-less-temporary-solutions" class="section level2">
+<h2>More or less temporary solutions</h2>
+<p>This section presents solutions for caching results very temporarily, or less temporarily.</p>
+<div id="caching-results-within-an-r-session" class="section level3">
+<h3>Caching results within an R session</h3>
+<p>To cache results within an R session, you could use a temporary directory for data.
+For any function call you could use <code>memoise</code> that supports, well <a href="https://en.wikipedia.org/wiki/Memoization">memoization</a> which is best explained with an example.</p>
+<pre class="r"><code>time &lt;- memoise::memoise(Sys.time)
+time()</code></pre>
+<pre><code>## [1] &quot;2020-09-16 23:20:45 EDT&quot;</code></pre>
+<pre class="r"><code>Sys.sleep(1)
+time()</code></pre>
+<pre><code>## [1] &quot;2020-09-16 23:20:45 EDT&quot;</code></pre>
+<p>Only the first call to <code>time()</code> actually calls <code>Sys.time()</code>, after that the results is saved for the entire session unless <code>memoise::forget()</code> is called.
+It is great for speeding up code, and for <a href="https://dmi3kno.github.io/polite/">not abusing internet resources which is why the <code>polite</code> package wraps <code>memoise</code></a>.</p>
+</div>
+<div id="providing-a-ready-to-use-dataset-in-a-non-cran-package" class="section level3">
+<h3>Providing a ready-to-use dataset in a non-CRAN package</h3>
+<p>If your package depends on the use of a huge dataset, the same for all users, that is by definition too huge for CRAN, you can use <a href="https://journal.r-project.org/archive/2017/RJ-2017-026/index.html">a setup like the one presented by Brooke Anderson and Dirk Eddelbuettel in which the data is packaged up in a separate package not on CRAN</a>, that the user will install therefore saving the data on disk somewhere where you can find it easily.<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a></p>
+</div>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>In this blog post we presented ways of saving configuration options and data in a not so temporary way in R packages.
+We mentioned R startup files (options in .Rprofile and secrets in .Renviron, the <code>startup</code> package); the <code>rappdirs</code> and <code>hoardr</code> packages as well as an exciting similar feature in R devel; the <code>keyring</code> package.
+Writing in the user home directory can be viewed as invasive (and can trigger CRAN archival), hence there is a need for a good package design (asking for confirmation; providing cache management functions like <code>getlandsat</code> does) and documentation for transparency.</p>
+<p>Do <em>you</em> use any form of caching on disk with a default location in one of your packages?<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a></p>
+<hr />
+</div>
+<div id="additional-notes" class="section level1">
+<h1>Additional Notes:</h1>
+<div id="my-setup" class="section level2">
+<h2>My Setup</h2>
+<ul>
+<li><p><a href="https://gist.github.com/jimbrig/1841b6b394733d7671590f5ffc20940a">RProfile</a></p></li>
+<li><p><a href="https://gist.github.com/jimbrig/434be6ac8c60b7c4c661f298c6856ae2">Dotfiles and Preferences</a></p></li>
+<li><p><a href="https://gist.github.com/jimbrig/faf4181ae8d3e7bc97f37fc407f61523">Cache Utils</a></p></li>
+<li><p><a href="https://gist.github.com/jimbrig/36bcdec179de1da173639e6e786993d6">R Setup Script</a></p></li>
+</ul>
+<div id="rprofile" class="section level3">
+<h3>.Rprofile</h3>
+<pre class="r"><code>if (interactive()) {
+  suppressMessages(suppressWarnings(require(devtools)))
+  suppressMessages(suppressWarnings(require(testthat)))
+}
+
+# cran mirror
+options(repos = c(CRAN=&#39;https://cran.rstudio.com/&#39;))
+# or
+# options(repos = c(CRAN=&#39;https://cloud.r-project.org&#39;))
+
+# install packages in parallel via &#39;Ncpus&#39; argument
+# https://www.jumpingrivers.com/blog/speeding-up-package-installation/
+# parallel::detectCores() == 8 (8 total cores, 4 physical, 4 hyper-threading, ~6 max)
+options(Ncpus = 6L)
+
+# turn on completion of installed package names
+utils::rc.settings(ipck = TRUE)
+
+# usethis / devtools
+options(
+  usethis.protocol = &quot;ssh&quot;,
+  usethis.description = list(
+    `Authors@R` = &#39;
+          person(&quot;Jimmy&quot;, &quot;Briggs&quot;,
+          email = &quot;jimmy.briggs@oliverwyman.com&quot;,
+          role = c(&quot;aut&quot;, &quot;cre&quot;))&#39;,
+    License = &quot;MIT + file LICENSE&quot;,
+    Language =  &quot;es&quot;
+  )
+)
+
+# addinit
+options(
+  &quot;addinit&quot; = list(
+    author = &quot;Jimmy Briggs &lt;jimmy.briggs@oliverwyman.com&gt;&quot;,
+    project = list(
+      folders = list(
+        default = c(&quot;R&quot;, &quot;inst&quot;, &quot;man&quot;, &quot;data-raw&quot;, &quot;data&quot;, &quot;tests&quot;, &quot;vignettes&quot;),
+        selected = c(&quot;R&quot;, &quot;man&quot;)
+      ),
+      packages = list(
+        default = rownames(utils::installed.packages()),
+        selected = &quot;shiny&quot;
+      )
+    )
+  )
+)
+
+# dev and old libraries
+options(
+  &quot;dev_lib&quot; = &quot;C:/Users/jimmy.briggs/Computer/Program Files/R/win-library/Dev&quot;,
+  &quot;old_lib&quot; = &quot;C:/Users/jimmy.briggs/Computer/Program Files/R/win-library/Old&quot;
+)
+
+# map network drives - runs a batch/vbs script file
+if (!dir.exists(&quot;H:/&quot;)) {
+  cmd_path &lt;- normalizePath(&quot;C:\\windows\\OWGLocalLoginScript.vbs&quot;)
+  cmd &lt;- paste0(&quot;WScript &quot;, &#39;&quot;&#39;, cmd_path, &#39;&quot;&#39;)
+  system(command = cmd, wait = TRUE)
+  if (dir.exists(&quot;H:/&quot;) &amp;&amp; dir.exists(&quot;G:/&quot;)) {
+    usethis::ui_info(&quot;Successfully mapped H:/ and G:/ Drives!&quot;)
+  }
+  rm(cmd_path, cmd)
+  invisible(gc())
+}</code></pre>
+</div>
+<div id="renviron" class="section level3">
+<h3>.Renviron</h3>
+<pre class="r"><code># timezone
+TZ=UTC
+
+# environment paths
+R_HOME=&quot;C:\Users\jimmy.briggs\Documents&quot;
+R_LIBS_USER=&quot;C:\Users\jimmy.briggs\Computer\Program Files\R\win-library\4.0&quot;
+R_USERDATA_DIR=&quot;C:\Users\jimmy.briggs\AppData\Roaming\R\data\R&quot;
+RSTUDIO_MSYS_SSH=&quot;C:\Program Files/RStudio/bin/msys-ssh-1000-18&quot;
+RSTUDIO_PANDOC=&quot;C:/Program Files/RStudio/bin/pandoc&quot;
+MYSQL_HOME=&quot;C:/Users/jimmy.briggs/sql/&quot;
+JAVA_HOME=&quot;C:/java/jdk-11&quot;
+# Ghostscript
+# qpdf
+# etc.
+
+# add Rtools and Rterm/R.exe to sys path
+PATH=&quot;${RTOOLS40_HOME}\usr\bin;${PATH}&quot;
+PATH=&quot;C:/Program Files/R/bin/x64/&quot;
+
+# specs
+R_ARCH=x64
+RSTUDIO_SESSION_PORT=24886
+RSTUDIO_USER_IDENTITY=jimmy.briggs
+GITHUB_USERNAME=jimbrig
+
+# credentials
+GITHUB_PAT=&lt;secret&gt;
+TODOIST_API_TOKEN=&lt;secret&gt;
+TMETRIC_API_TOKEN=&lt;secret&gt;
+GOOGLEDRIVE_API_TOKEN=&lt;secret&gt;
+
+# and more...</code></pre>
+</div>
+</div>
+</div>
+<div id="further-reading" class="section level1">
+<h1>Further Reading:</h1>
+<ul>
+<li><p><a href="https://csgillespie.github.io/efficientR/">Efficient R Programming Book</a></p></li>
+<li><p><a href="https://bookdown.org/rdpeng/RProgDA/">Mastering Software Development with R Book</a></p></li>
+<li><p><a href="https://stat.ethz.ch/R-manual/R-devel/library/base/html/Startup.html">R Documentation: Initialization at Start of an R Session</a></p></li>
+<li><p><a href="https://cran.r-project.org/doc/manuals/r-release/R-admin.html">R Installation and Administration Manual</a></p></li>
+<li><p><a href="https://cran.r-project.org/doc/manuals/r-release/R-ints.html">R Internals Manual</a></p></li>
+</ul>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Note that in tests <code>usethis</code> suppresses the chatty behavior by the use of <a href="https://github.com/r-lib/usethis/blob/7af1aa2e0ac0b699fdd39f5cfbe4d1ccba41bc48/tests/testthat/test-use-pipe.R#L36"><code>withr::local_options(list(usethis.quiet = FALSE))</code></a>.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>The <code>gert</code> package uses libgit2, not Git directly.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>There’s actually an <a href="https://github.com/r-lib/backports#backports">R package called <code>backports</code></a> which provides backports of functions which have been introduced in one of the base packages in R version 3.0.1 or later, maybe it’ll provide backports for <code>tools::R_user_dir()</code>?<a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+<li id="fn4"><p>If your package has a helper for downloading and saving the dataset locally, and you don’t control the dataset source (contrary to the aforementioned approach), you might want to register several URLs for that content, as <a href="https://github.com/cboettig/contenturi#programmatic-long-term-data-access">explained in the README of the conceptual <code>contenturi</code> package</a>.<a href="#fnref4" class="footnote-back">↩︎</a></p></li>
+<li id="fn5"><p>In <code>file.path(rappdirs::user_data_dir("userdata", "r"), "validated_emails.csv")</code>, C:~1.BRI/validated_emails.csv in my case.<a href="#fnref5" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

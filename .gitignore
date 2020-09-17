@@ -6,3 +6,5 @@ blogdown
 .DS_Store
 Thumbs.db
 public/
+
+debug.log
