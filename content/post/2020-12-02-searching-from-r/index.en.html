@@ -1,0 +1,677 @@
+---
+title: Advanced Search Engine Queries from R
+author: Jimmy Briggs
+date: '2020-12-02'
+slug: searching_from_r
+categories:
+  - Tips & Tricks
+  - R
+tags:
+  - Development
+  - Tips & Tricks
+featured_image: '/images/magnifying_glass.jpg'
+description: 'Utilize advanced searching techniques to quickly launch a search from R'
+output: 
+  html_document: 
+    toc: yes
+    toc_float: true
+    keep_md: yes
+    code_folding: show
+    code_download: true
+    css: 'css/styles.css'
+    includes:
+      in_header: 'html/header.html'
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+<link href="/rmarkdown-libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/anchor-sections/anchor-sections.js"></script>
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<ul>
+<li>Skip to <a href="#r-code">the R code examples</a>.</li>
+</ul>
+<hr />
+<p>Programmers are good at engineering software and designing web applications.
+I argue that we can apply the same logic to facilitate an environment which provides
+a natural, orchestrated flow between the various activities we undertake,
+both online and in the console.</p>
+<p>In this post I use searching the web, a process developers rely on heavily for
+many different reasons, as a basic example of an area for improvement.</p>
+<p>I will show you some examples of querying specific search engines
+directly from your R console as well as provide some pre-configured functions
+for some of my most common use-cases.</p>
+<p>Before showcasing the code, first I want to bring to light some ideas
+surrounding our daily workflows as developers and how we interact with the web.</p>
+<div id="your-mind-is-a-cpu" class="section level3">
+<h3>Your Mind is a CPU</h3>
+<blockquote>
+<p>“The optimal number of threads in any system is one thread.” - Scott Hanselman</p>
+</blockquote>
+<p>Think of your mind as a CPU (central processing unit) like that on your computer.
+Each separate task you pursue throughout the day relies on a limited
+amount of resources, which can be thought of as your bank of available<br />
+<em>Random Access Memory</em>, or RAM.</p>
+<p>From this perspective, the idea of multi-tasking becomes <em>multi-threading</em>,
+and as developers we all know that for computers to run asynchronous,
+parallel, multi-threaded processes requires a highly intricate, well
+designed, and deeply thought out infrastructure to work properly
+without overloading the CPU and crashing the machine.</p>
+<p>Similarly, switching contexts between different digital environments
+causes your mind to have to continuously re-adjust and reboot its underlying
+resources in order to facilitate the influx of new information in need of being
+processed.</p>
+<p>In other words, it takes time, energy, and resources to get your mind to focus,
+and every time we switch tasks or contexts, we lose energy that wouldn’t have
+been lost if we had just stayed in one context initially. The fatigue that builds
+up from all of this energy loss can potentially demotivate us,
+as well as cause mental burnout.</p>
+<p>Programmers should strive to reach a <strong>state of flow</strong> in which complete focus
+can be given to one activity.</p>
+<p>This requires determination and discipline in order to keep that focus
+streamlined as well as a proper environment which motivates focus
+instead of scattered, distracted thought.</p>
+<p>The solution to avoiding burnout and unproductive programming
+habits is to provide an ecosystem where context switching is
+minimized and when needed, streamlined.</p>
+</div>
+</div>
+<div id="searching-from-r" class="section level2">
+<h2>Searching from R</h2>
+<div id="identifying-an-opportunity" class="section level3">
+<h3>Identifying an Opportunity</h3>
+<p>Have you ever wanted to search google directly from R? What about query your
+organizations Github repos or search for packages on your respective CRAN mirror?</p>
+<p>This thought never crossed my mind until I took a second to think about the potential
+benefits of constructing a system for implementing this in R.</p>
+<p>The problem I found was two-fold:</p>
+<ol style="list-style-type: decimal">
+<li>Searching the web for R specific resources can be frustrating, time-consuming, and difficult.</li>
+<li>The process of switching contexts from R to the browser is unproductive and breaks my natural development flow.</li>
+</ol>
+<p>Identifying these issues, I took it as an opportunity to create something new, and potentially beneficial to others
+as we developers love to do.</p>
+</div>
+<div id="reviewing-current-processes" class="section level3">
+<h3>Reviewing Current Processes</h3>
+<p>Although most R developers are extensively familiar with
+<a href="https://en.wikipedia.org/wiki/Don%27t_repeat_yourself">The DRY Principle</a> (<em>Don’t repeat yourself</em>)
+in programming, many do not attempt to extend the principle outside of their
+code.</p>
+<p>Thinking on the principle further, I realized that the amount of time developers
+interact with the web through a web browser interface is much larger than we
+may think and is only growing as our dependence on online services and learning
+resources increase exponentially.</p>
+<p>For me, the idea of searching from your command prompt or terminal stemmed from
+my repetitive need to search online for some form of information whilst in the
+midst of a programming endeavor. While there are many amazing API’s, SDK’s, and
+localized web-oriented frameworks allowing developers to interact with the web
+from their console, I found myself in need of a more general, simplistic
+approach to querying information hosted online from my local machine.</p>
+<p>Once I stopped to think about my daily processes while developing locally and
+interacting with the internet, I quickly realized that there is a much larger
+frequency of instances where I am in need of browsing the web than I originally
+would have anticipated. Whether navigating to my web browser to google a new
+concept, review a Github pull request, or even launch a locally hosted shiny
+application, I found that I use my browsers constantly throughout the day.</p>
+<p>To name a few examples:</p>
+<ul>
+<li>Reviewing a new pull request on Github or searching my backlog of issues assigned to me</li>
+<li>Searching for new software or downloading a new version</li>
+<li>Searching my cloud storage drives for files or data</li>
+<li>Searching my emails for important information</li>
+<li>Reviewing online documentation when learning something new</li>
+<li>Retrieving a forgotten API Key or account password</li>
+<li>Checking on and maintaining a hosted cloud service platform</li>
+<li>Watching a demo video on youtube for a new application</li>
+<li>Checking my RSS feeds and developer blogs to stay up to date on current news</li>
+<li>Searching google for a new library, concept, or framework</li>
+</ul>
+<p>As you can see, there are a variety of instances where interacting with and
+querying the web has become a routine in our daily development workflows
+and learning processes.</p>
+<p>Additionally, due to the lack of a more streamlined, self-contained
+approach to this reliance on the web while programming, I found myself
+easily distracted my all of the bells and whistles the internet and my
+browsers have to offer. Between all of the bookmarks, feeds, notifications
+and variety of browser extensions the simple process of leaving your
+code and opening your browser has much larger implications than most people realize.</p>
+<p>While this may seem like a minimal interruption to your programming workflow,
+the fact of the matter is that programming is a form of work which requires
+a very deep, specific environment and mindset in order to keep your
+development pipelines productive and efficient. In other words,
+programming is not easy and requires intense focus.</p>
+<p>Therefore, developers should do everything they can
+to avoid having to switch in and out of the various shallow
+contexts surrounding our everyday lives while attempting
+to perform a session of productive coding.</p>
+</div>
+<div id="developing-a-solution" class="section level3">
+<h3>Developing a Solution</h3>
+<div id="browser-search-engines" class="section level4">
+<h4>Browser Search Engines</h4>
+<p>To provide a simple, yet powerful solution to the issues surrounding browsing the
+internet for necessary resources, I started with my personal browser settings.</p>
+<p>Most web browser providers facilitate a setting where you can configure your own custom
+configurations for creating search queries to specific web sites using your
+address bar.</p>
+<p>For example, in Chrome if you navigate to Settings &gt; Manage Search Engines you will see
+a list of default search engine providers such as google, bing, and yahoo as well as
+some auto-generated engines created by websites you have visited in the past such
+as Youtube or Medium.</p>
+<p>What most people do not realize is they can add <a href="https://www.thewindowsclub.com/search-any-website-directly-from-the-chrome-or-edge-address-bar">add their own search engines and keywords</a> also.</p>
+<p>For example, if I want to search Github repositories querying with a specific keyword while
+filtering for only repositories categorized with the language <em>R</em> the query URL would be:
+<code>https://github.com/search?q=%slanguage%3Ar</code>.</p>
+<p>You can produce this yourself by searching from Github and applying the filters
+yourself and replacing the term you searched for with <code>%s</code>, similar
+to the <code>sprintf</code> context. Lastly, assign a keyword of <code>ghr</code> and test it out by
+typing <code>ghr</code> in your address bar and pressing tab or enter. Now when you search
+it will direct you to Github R repositories!</p>
+<p>Example: Search Github for <code>tidyverse</code> with keyword <code>ghr</code> filtering for <code>Language:R</code>:</p>
+<p><img src="images/ghr-search-example.gif" /></p>
+<p>note that this is setup with the following in <a href="chrome://settings/searchEngines" class="uri">chrome://settings/searchEngines</a>:</p>
+<p><img src="images/ghr-settings.png" /></p>
+<hr />
+<p>Building on this framework I setup in my browser years ago, I decided to take it one step
+further by bringing the searching functionality to my personal R package
+<a href="https://github.com/jimbrig/browsr">browsr</a> focusing on R-specific
+search engines (it can be quite difficult to search effectively for R
+resources filtering out everything else given R is only one letter).</p>
+</div>
+</div>
+<div id="setting-up-the-search-engines" class="section level3">
+<h3>Setting up the Search Engines</h3>
+<p>For setting up the search engines all I needed to do was migrate my browser
+customized search engine URL’s into R by wrapping them in R functions which pass
+the <code>%s</code> syntax as a function argument.</p>
+<p>Here is a list of the search engines I have implemented so far and their functions:</p>
+<ul>
+<li>General Search Function</li>
+<li>Search Github</li>
+<li>Search RSeek.org</li>
+<li>Search Finzi’s R Site</li>
+<li>Search the R Forum on Nabble</li>
+<li>Search Google</li>
+<li>Search R-Project Domain from Google</li>
+<li>Search METACRAN</li>
+</ul>
+</div>
+<div id="examples" class="section level3">
+<h3>Examples</h3>
+<p>Here is a list of some common examples:</p>
+<ul>
+<li>Gmail: <code>https://mail.google.com/mail/ca/u/0/#apps/%s</code></li>
+<li>YouTube: <code>https://www.youtube.com/results?search_query=%s&amp;page={startPage?}&amp;utm_source=opensearch</code></li>
+<li>Facebook: <code>https://www.facebook.com/search/top/?q=%s&amp;opensearch=1</code></li>
+<li>Twitter: <code>https://twitter.com/search?q=%s</code></li>
+<li>SoundCloud: <code>https://soundcloud.com/search?q=%s</code></li>
+<li>Amazon: <code>https://www.amazon.in/s/ref=nb_sb_noss_2?url=search-alias%3Daps&amp;field-keywords=%s</code></li>
+</ul>
+<p>Some may find it useful to create custom github queries for their Github accounts:</p>
+<ul>
+<li>Your personal Github repositories: <code>https://github.com/&lt;GITHUB_USERNAME&gt;?tab=repositories&amp;q=%s</code><br />
+</li>
+<li>Your organizations Github repositories: <code>https://github.com/search?q=org%3A&lt;GITHUB_ORGANIZATIoN&gt;+%s</code></li>
+</ul>
+<div id="example-tables" class="section level4 tabset tabset-fade tabset-pills">
+<h4>Example Tables</h4>
+<div id="general" class="section level5">
+<h5>General</h5>
+<table>
+<thead>
+<tr class="header">
+<th>Search Engine</th>
+<th>Keyword</th>
+<th>Query URL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Edge Settings</td>
+<td>settings</td>
+<td><code>edge://settings/?search=%s</code></td>
+</tr>
+<tr class="even">
+<td>Edge History</td>
+<td>hist</td>
+<td><code>edge://history/all?q=%s</code></td>
+</tr>
+<tr class="odd">
+<td>Gmail Inbox Search</td>
+<td>gmail</td>
+<td><code>https://inbox.google.com/search/%s</code></td>
+</tr>
+<tr class="even">
+<td>Google Drive</td>
+<td>gdrive</td>
+<td><code>https://drive.google.com/drive/u/0/search?q=%s</code></td>
+</tr>
+<tr class="odd">
+<td>Github</td>
+<td>gh</td>
+<td><code>https://github.com/search?q=%s&amp;ref=opensearch</code></td>
+</tr>
+<tr class="even">
+<td>Github Gist</td>
+<td>gist</td>
+<td><code>https://gist.github.com/search?q=&amp;ref=opensearch</code></td>
+</tr>
+<tr class="odd">
+<td>StackOverFlow</td>
+<td>stackoverflow</td>
+<td><code>https://stackoverflow.com/search?q=%s</code></td>
+</tr>
+<tr class="even">
+<td>Dev.to</td>
+<td>devto</td>
+<td><code>https://dev.to/search?q=%s</code></td>
+</tr>
+<tr class="odd">
+<td>DevDocs</td>
+<td>devdocs</td>
+<td><code>https://devdocs.io/#q=%s</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="developer-resources" class="section level5">
+<h5>Developer Resources</h5>
+<p>And some more general developer resources:</p>
+<table>
+<colgroup>
+<col width="28%" />
+<col width="18%" />
+<col width="52%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Search Engine</th>
+<th>Keyword</th>
+<th>Query URL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="https://github.com/">Github</a></td>
+<td>gh</td>
+<td><code>https://github.com/search?q=%s&amp;ref=opensearch</code></td>
+</tr>
+<tr class="even">
+<td><a href="https://gist.github.com/">Github Gist</a></td>
+<td>gist</td>
+<td><code>https://gist.github.com/search?q=&amp;ref=opensearch</code></td>
+</tr>
+<tr class="odd">
+<td><a href="https://stackoverflow.com/">StackOverFlow</a></td>
+<td>stackoverflow</td>
+<td><code>https://stackoverflow.com/search?q=%s</code></td>
+</tr>
+<tr class="even">
+<td><a href="https://dev.to/">Dev.to</a></td>
+<td>devto</td>
+<td><code>https://dev.to/search?q=%s</code></td>
+</tr>
+<tr class="odd">
+<td><a href="https://devdocs.io/">DevDocs</a></td>
+<td>devdocs</td>
+<td><code>https://devdocs.io/#q=%s</code></td>
+</tr>
+<tr class="even">
+<td><a href="https://developer.mozilla.org/en-US/">Mozilla WebDocs</a></td>
+<td>mozdocs</td>
+<td><code>https://developer.mozilla.org/en-US/search?q=%s&amp;w=3&amp;qs=plugin</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="r-resources" class="section level5">
+<h5>R-Resources</h5>
+<p>The <a href="https://www.r-project.org/">R-Project Website</a> provides some useful search
+engines <a href="https://www.r-project.org/search.html">here</a>:</p>
+<center>
+<img src="images/rproj-search.jpeg" />
+</center>
+<p>Taking these references as a starting point we can create some query URLs for
+searching R specifically:</p>
+<hr />
+<table>
+<colgroup>
+<col width="28%" />
+<col width="18%" />
+<col width="52%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Search Engine</th>
+<th>Keyword</th>
+<th>Query URL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="http://finzi.psych.upenn.edu/search.html">R Site Search by Finzi</a></td>
+<td>rsite</td>
+<td><code>http://finzi.psych.upenn.edu/cgi-bin/namazu.cgi?query=%s&amp;max=100&amp;result=normal&amp;sort=score&amp;idxname=functions&amp;idxname=views</code></td>
+</tr>
+<tr class="even">
+<td><a href="https://rseek.org">RSeek</a></td>
+<td>rseek</td>
+<td><code>https://www.rseek.org/?q=%s</code></td>
+</tr>
+<tr class="odd">
+<td><a href="http://r.789695.n4.nabble.com/">R Nabble Forum</a></td>
+<td>rnabble</td>
+<td><code>https://r.789695.n4.nabble.com/template/NamlServlet.jtp?macro=search_page&amp;node=789695&amp;query=%s</code></td>
+</tr>
+<tr class="even">
+<td><a href="http://www.google.com/advanced_search">Advanced Google Search: R Project</a></td>
+<td>rproj</td>
+<td><code>https://www.google.com/search?q=%s&amp;domains=r-project.org&amp;sitesearch=r-project.org&amp;btnG=Google+Search</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="additional-r" class="section level5">
+<h5>Additional R</h5>
+<p>Additionally, I have created these R related search queries as well:</p>
+<table>
+<colgroup>
+<col width="28%" />
+<col width="18%" />
+<col width="52%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Search Engine</th>
+<th>Keyword</th>
+<th>Query URL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="https://github.com/search?q=language%3Ar">Github - Language:R</a></td>
+<td>ghr</td>
+<td><code>https://github.com/search?q=%slanguage%3Ar</code></td>
+</tr>
+<tr class="even">
+<td><a href="https://gist.github.com/search?q=language%3Ar&amp;ref=searchresults">Github Gist - Language:R</a></td>
+<td>gistr</td>
+<td><code>https://gist.github.com/search?q=%s+language%3Ar&amp;ref=searchresults</code></td>
+</tr>
+<tr class="odd">
+<td><a href="https://stackoverflow.com/search?q=%5Br%5D">StackOverFlow - Tag:R</a></td>
+<td>stackoverflowr</td>
+<td><code>https://stackoverflow.com/search?q=%5Br%5D+%s</code></td>
+</tr>
+<tr class="even">
+<td><a href="https://www.r-pkg.org/">METACRAN</a></td>
+<td>metacran</td>
+<td><code>https://www.r-pkg.org/search.html?q=%s</code></td>
+</tr>
+<tr class="odd">
+<td><a href="http://www.dangoldstein.com/search_r.html">Dan Goldstein’s Site</a></td>
+<td>danr</td>
+<td><code>http://www.dangoldstein.com/search_r.html?cx=partner-pub-8815643643661420%3Al9jc9v-e2vi&amp;cof=FORID%3A10&amp;ie=ISO-8859-1&amp;q=%s&amp;sa=Search&amp;siteurl=www.dangoldstein.com%2Fsearch_r.html&amp;ref=search.r-project.org%2F&amp;ss=265j35153j3</code></td>
+</tr>
+<tr class="even">
+<td><a href="http://rdocumentation.org/">R Documentation</a></td>
+<td>rdocs</td>
+<td><code>http://rdocumentation.org/</code></td>
+</tr>
+<tr class="odd">
+<td><a href="https://rdrr.io/find/">R Package Documentation - Packages</a></td>
+<td>rdrrpkg</td>
+<td><code>https://rdrr.io/find/?repos=cran%2Cbioc%2Crforge%2Cgithub&amp;fuzzy_slug=%s</code></td>
+</tr>
+<tr class="even">
+<td><a href="https://rstudio.com/">RStudio Website</a></td>
+<td>rstudio</td>
+<td><code>https://rstudio.com/#stq=%s&amp;stp=1</code></td>
+</tr>
+<tr class="odd">
+<td><a href="https://www.r-bloggers.com/">R-Bloggers</a></td>
+<td>rbloggers</td>
+<td><code>https://cse.google.com/cse?cx=005359090438081006639%3Apaz69t-s8ua&amp;ie=UTF-8&amp;q=%s&amp;sa=Go</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div id="r-code" class="section level2 tabset tabset-fade tabset-pills">
+<h2>R Code</h2>
+<p>Online Reference: <a href="https://jimbrig.github.io/browsr/reference/search.html" class="uri">https://jimbrig.github.io/browsr/reference/search.html</a></p>
+<hr />
+<div id="general-search-engine" class="section level3">
+<h3>General Search Engine</h3>
+<pre class="r"><code>#&#39; Generalized Search and Search Engine Examples
+#&#39;
+#&#39; Use these functions to search the web directly from your browser,
+#&#39; building advanced queries and supplying common useful R related domains.
+#&#39;
+#&#39; @param s string to search for (`%s` in the query URL)
+#&#39; @param query_url string representing the URL to query; defaults to Google
+#&#39;
+#&#39; @name search
+#&#39;
+#&#39; @keywords search_engines
+#&#39;
+#&#39; @export
+#&#39;
+#&#39; @examples
+#&#39; library(browsr)
+#&#39; # default search on google
+#&#39; search_online(&quot;polished.tech&quot;)
+#&#39;
+#&#39; # search github (note: &amp;ref=opensearch)
+#&#39; search_online(&quot;polished&quot;, &quot;https://github.com/search?q=%s&amp;ref=opensearch&quot;)
+#&#39;
+#&#39; # search Github with language:r, org:tychobra for &#39;polished&#39; (note: &#39;%3A&#39; represents a &#39;:&#39;)
+#&#39; search_online(&quot;polished&quot;, &quot;https://github.com/search?q=%s+language%3Ar+org%3Atychobra&quot;)
+search_online &lt;- function(s,
+                          query_url = &quot;https://google.com/search?q=&quot;) {
+
+  url &lt;- paste0(query_url, s)
+
+  utils::browseURL(url)
+
+}</code></pre>
+</div>
+<div id="search-github" class="section level3">
+<h3>Search Github</h3>
+<pre class="r"><code>#&#39; Search Github
+#&#39;
+#&#39; Query Github&#39;s internal search engine.
+#&#39;
+#&#39; @param s string to search for
+#&#39; @param type what to search for, see details for options
+#&#39; @param language optional language filter
+#&#39; @param topic optional topic filter
+#&#39; @param user optional user filter
+#&#39; @param org optional org filter
+#&#39;
+#&#39; @describeIn search
+#&#39;
+#&#39; @export
+#&#39;
+#&#39; @examples
+#&#39; search_gh(&quot;websocket&quot;, language = &quot;r&quot;, topic = &quot;rshiny&quot;)
+#&#39;
+#&#39; # search your org
+#&#39; search_gh(&quot;polished&quot;, org = &quot;tychobra&quot;)
+search_gh &lt;- function(s,
+                      type = &quot;all&quot;,
+                      language = NULL,
+                      topic = NULL,
+                      user = NULL,
+                      org = NULL) {
+
+  types &lt;- c(&quot;all&quot;,
+             &quot;repo&quot;,
+             &quot;code&quot;,
+             &quot;commit&quot;,
+             &quot;issue&quot;,
+             &quot;discussion&quot;,
+             &quot;package&quot;,
+             &quot;marketplace&quot;,
+             &quot;topic&quot;,
+             &quot;wiki&quot;,
+             &quot;user&quot;)
+
+  match.arg(type, types)
+  type_query &lt;- ifelse(type == &quot;all&quot;, &quot;&amp;ref=opensearch&quot;, paste0(&quot;&amp;type=&quot;, type))
+  base_url &lt;- &quot;https://github.com/search?q=&quot;
+  lang_query &lt;- ifelse(is.null(language), &quot;&quot;, paste0(&quot;+language%3A&quot;, language))
+  topic_query &lt;- ifelse(is.null(topic), &quot;&quot;, paste0(&quot;+topic%3A&quot;, topic))
+  user_query &lt;- ifelse(is.null(user), &quot;&quot;, paste0(&quot;+user%3A&quot;, user))
+  org_query &lt;- ifelse(is.null(org), &quot;&quot;, paste0(&quot;org%3A&quot;, org))
+  query &lt;- paste0(s, &quot; &quot;, lang_query, topic_query, user_query, org_query, type_query)
+
+  url &lt;- paste0(base_url, query)
+
+  utils::browseURL(url)
+
+}</code></pre>
+</div>
+<div id="rseek.org" class="section level3">
+<h3>Rseek.org</h3>
+<pre class="r"><code>#&#39; Search RSeek.org
+#&#39;
+#&#39; Query a search on [rseek.org](https://rseek.org/).
+#&#39;
+#&#39; @param s string to search for
+#&#39; @export
+#&#39;
+#&#39; @describeIn search
+#&#39;
+#&#39; @references
+#&#39; - &lt;http://www.sashagoodman.com/&gt;
+search_rseek &lt;- function(s) {
+  url &lt;- paste0(&quot;http://www.rseek.org/?q=&quot;, s)
+  utils::browseURL(url)
+}</code></pre>
+</div>
+<div id="search-r-site-via-finzi" class="section level3">
+<h3>Search R Site via Finzi</h3>
+<pre class="r"><code>#&#39; Search Finzi
+#&#39;
+#&#39; @param s string to search for
+#&#39;
+#&#39; @describeIn search
+#&#39;
+#&#39; @references
+#&#39; - &lt;http://finzi.psych.upenn.edu/search.html&gt;
+#&#39; - &lt;http://finzi.psych.upenn.edu/search/manual.html#query&gt;
+#&#39;
+#&#39; @export
+search_finzi &lt;- function(s) {
+
+  url &lt;- paste0(
+    &quot;http://finzi.psych.upenn.edu/cgi-bin/namazu.cgi?query=&quot;,
+    s,
+    &quot;&amp;max=100&amp;result=normal&amp;sort=score&amp;idxname=functions&amp;idxname=views&quot;
+  )
+
+}</code></pre>
+</div>
+<div id="search-nabble-r-forum" class="section level3">
+<h3>Search Nabble R Forum</h3>
+<pre class="r"><code>#&#39; Search Nabble R Forum
+#&#39;
+#&#39; Query a search on the R Nabble Forum. Nabble is an innovative search engine
+#&#39; for R messages.
+#&#39;
+#&#39; @describeIn search
+#&#39;
+#&#39; @param s string to search for
+#&#39;
+#&#39; @export
+#&#39; @references
+#&#39; - &lt;https://cloud.r-project.org/search.html&gt;
+#&#39; - &lt;http://n4.nabble.com/help/Answer.jtp?id=31&gt;
+search_nabble &lt;- function(s) {
+
+  url &lt;- paste0(
+    &quot;https://r.789695.n4.nabble.com/template/NamlServlet.jtp?macro=search_page&amp;node=789695&amp;query=&quot;, s
+  )
+
+  utils::browseURL(url)
+
+}</code></pre>
+</div>
+<div id="search-google" class="section level3">
+<h3>Search Google</h3>
+<pre class="r"><code>#&#39; Search Google
+#&#39;
+#&#39; @describeIn search
+#&#39;
+#&#39; @param s string to search for
+#&#39; @export
+search_google &lt;- function(s) {
+  url &lt;- paste0(&quot;https://www.google.com/search?q=&quot;, s)
+  utils::browseURL(url)
+}</code></pre>
+</div>
+<div id="search-r-project-domain-via-google" class="section level3">
+<h3>Search R Project Domain via Google</h3>
+<pre class="r"><code>#&#39; Search R Project Domain on Google
+#&#39;
+#&#39; @param s string to search for
+#&#39;
+#&#39; @describeIn search
+#&#39;
+#&#39; @export
+#&#39;
+#&#39; @details See &lt;https://cloud.r-project.org/search.html&gt; which showcases Google&#39;s
+#&#39;   advanced search feature to query only R-Project domain sites via the
+#&#39;   [Google Search Engine](http://www.google.com/advanced_search).
+search_rproject &lt;- function(s) {
+
+  url &lt;- paste0(
+    &quot;https://www.google.com/search?q=&quot;, s,
+    &quot;&amp;domains=r-project.org&amp;sitesearch=r-project.org&amp;btnG=Google+Search&quot;
+  )
+
+  utils::browseURL(url)
+
+}</code></pre>
+</div>
+<div id="search-metacran" class="section level3">
+<h3>Search METACRAN</h3>
+<pre class="r"><code>#&#39; Search METACRAN
+#&#39;
+#&#39; @param s string to search for
+#&#39;
+#&#39; @describeIn search
+#&#39;
+#&#39; @export
+search_metacran &lt;- function(s) {
+
+  url &lt;- paste0(
+    &quot;https://www.r-pkg.org/search.html?q=&quot;, s)
+
+  utils::browseURL(url)
+
+}</code></pre>
+</div>
+</div>
+<div id="concluding-remarks" class="section level2">
+<h2>Concluding Remarks</h2>
+<p>Download the source code from the <a href="">Github Repository</a>.</p>
+<p>Although I do use other terminals, languages, and shells outside of the R
+environment, most of my development work is done within R and RStudio.
+Therefore, I chose R as my framework for implementing a set of utility
+functions to quickly perform advanced search queries online from a wide
+variety of search engine source domains.</p>
+<p>Similar R Packages:</p>
+<ul>
+<li><a href="https://github.com/r-assist/searcher">searcher</a></li>
+<li><a href="https://github.com/fschaffner/websearchr">websearcher</a></li>
+<li><a href="https://cran.r-project.org/package=packagefinder">packageFinder</a></li>
+<li><code>tools::CRAN_package_db()</code> from the tools package</li>
+</ul>
+</div>
