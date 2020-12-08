@@ -4,9 +4,7 @@
 # The-R-Dispatch <img src="static/images/rdispatch.png" align="right" />
 
 <!-- badges: start -->
-
-[![Netlify
-Status](https://api.netlify.com/api/v1/badges/b8d9532b-dc4b-499d-8ab3-9da1804eb533/deploy-status)](https://app.netlify.com/sites/therdispatch/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/b8d9532b-dc4b-499d-8ab3-9da1804eb533/deploy-status)](https://app.netlify.com/sites/therdispatch/deploys)
 <!-- badges: end -->
 
 Build with blogdown.
