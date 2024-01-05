@@ -40,7 +40,7 @@ Full tech stack [here](/techstack.md)
 # Tech Stack File
 ![](https://img.stackshare.io/repo.svg "repo") [jimbrig/therdispatch-blogdown](https://github.com/jimbrig/therdispatch-blogdown)![](https://img.stackshare.io/public_badge.svg "public")
 <br/><br/>
-|25<br/>Tools used|12/07/23 <br/>Report generated|
+|26<br/>Tools used|01/05/24 <br/>Report generated|
 |------|------|
 </div>
 
@@ -182,9 +182,9 @@ Full tech stack [here](/techstack.md)
 </table>
 
 
-## <img src='https://img.stackshare.io/group.svg' /> Open source packages (11)</h2>
+## <img src='https://img.stackshare.io/group.svg' /> Open source packages (12)</h2>
 
-## <img width='24' height='24' src='https://img.stackshare.io/service/1120/lejvzrnlpb308aftn31u.png'/> npm (11)
+## <img width='24' height='24' src='https://img.stackshare.io/service/1120/lejvzrnlpb308aftn31u.png'/> npm (12)
 
 |NAME|VERSION|LAST UPDATED|LAST UPDATED BY|LICENSE|VULNERABILITIES|
 |:------|:------|:------|:------|:------|:------|
@@ -193,6 +193,7 @@ Full tech stack [here](/techstack.md)
 |[babel-core](https://www.npmjs.com/babel-core)|v6.26.3|06/18/20|Jimmy Briggs |MIT|N/A|
 |[babel-loader](https://www.npmjs.com/babel-loader)|v7.1.5|06/18/20|Jimmy Briggs |MIT|N/A|
 |[babel-preset-env](https://www.npmjs.com/babel-preset-env)|v1.7.0|06/18/20|Jimmy Briggs |MIT|N/A|
+|[cssnano](https://www.npmjs.com/cssnano)|v3.10.0|06/18/20|Jimmy Briggs |MIT|N/A|
 |[extract-text-webpack-plugin](https://www.npmjs.com/extract-text-webpack-plugin)|v2.1.2|06/18/20|Jimmy Briggs |MIT|N/A|
 |[file-loader](https://www.npmjs.com/file-loader)|v0.11.2|06/18/20|Jimmy Briggs |MIT|N/A|
 |[postcss-cssnext](https://www.npmjs.com/postcss-cssnext)|v2.11.0|04/29/22|dependabot[bot] |MIT|N/A|
